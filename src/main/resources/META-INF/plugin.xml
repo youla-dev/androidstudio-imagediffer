@@ -1,0 +1,16 @@
+<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
+<idea-plugin>
+    <id>com.allgorith.youla_tools.imagediff</id>
+    <name>ImageDiff</name>
+    <vendor>...</vendor>
+
+    <depends>com.intellij.modules.platform</depends>
+
+    <resource-bundle>strings.default</resource-bundle>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <toolWindow
+            factoryClass="com.allgorith.youla_tools.imagediff.presentation.IDiffToolWindow$Factory"
+            id="ImageDiffer" />
+    </extensions>
+</idea-plugin>
