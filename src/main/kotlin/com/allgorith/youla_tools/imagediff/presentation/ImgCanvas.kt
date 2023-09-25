@@ -22,6 +22,9 @@ import java.awt.event.MouseEvent
 import java.awt.event.MouseWheelEvent
 import java.awt.image.BufferedImage
 import java.io.File
+import java.util.Queue
+import java.util.concurrent.ConcurrentLinkedDeque
+import java.util.concurrent.atomic.AtomicReference
 import javax.imageio.ImageIO
 import javax.swing.SwingUtilities
 import kotlin.math.max
@@ -58,8 +61,8 @@ private data class Finder(
 class ImgCanvas(
     private val scope: CoroutineScope,
 ) : JBPanel<JBPanel<*>>() {
-    var result: BufferedImage? = null
-        private set
+    val result = AtomicReference<BufferedImage>()
+    private val imagePool = ConcurrentLinkedDeque<BufferedImage>()
     private val state = MutableStateFlow(RenderCfg())
 
     private val rect = Rectangle()
@@ -73,9 +76,10 @@ class ImgCanvas(
     init {
         scope.launch {
             state.collect {
-                result = withContext(Dispatchers.Default) {
-                    generateResultingImage(it)
+                val newResult = withContext(Dispatchers.Default) {
+                    generateResultingImage(it, imagePool)
                 }
+                result.getAndSet(newResult)?.let(imagePool::addLast)
                 repaint()
             }
         }
@@ -127,14 +131,26 @@ class ImgCanvas(
             }
     }
 
-    private fun generateResultingImage(cfg: RenderCfg): BufferedImage? = with(cfg) {
+    private fun generateResultingImage(cfg: RenderCfg, pool: Queue<BufferedImage>): BufferedImage? = with(cfg) {
         if (scr == null) return ref
         if (ref == null) return scr
 
         val w = scr.width
-        val h = min(scr.height, ref.height)
+        val h = scr.height
 
-        val img = BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB)
+        val img: BufferedImage
+        while (true) {
+            val img1 = pool.poll()
+            if (img1 == null) {
+                img = BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB)
+                break
+            }
+            if (img1.width == w && img1.height == height) {
+                img = img1
+                break
+            }
+        }
+
         (img.graphics as Graphics2D).use { g ->
             g.renderRespectingAspect(ref, referenceXOffset, referenceYOffset, w)
             g.composite = composite
@@ -156,7 +172,7 @@ class ImgCanvas(
         g.color = Color.DARK_GRAY
         g.fillRect(rect.x, rect.y, rect.width, rect.height)
 
-        result?.let {
+        result.get()?.let {
             val w = it.width
             g.renderRespectingAspect(
                 it,
@@ -226,7 +242,7 @@ class ImgCanvas(
 
         override fun mousePressed(event: MouseEvent) {
             if (SwingUtilities.isLeftMouseButton(event)) {
-                result ?: return
+                if (result.get() == null) return
                 val x = event.canvasX
                 val y = event.canvasY
                 draggingFinder = Finder(x, x, y, y)

@@ -129,7 +129,7 @@ class IDiffToolWindow(toolWindow: ToolWindow) {
     }
 
     private fun saveResult(): Job = scope.launch {
-        val image = ui.images.result ?: return@launch
+        val image = ui.images.result.get() ?: return@launch
         ui.saveResult.isEnabled = false
         try {
             withContext(Dispatchers.IO) {
