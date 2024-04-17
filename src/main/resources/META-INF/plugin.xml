@@ -2,6 +2,7 @@
 <idea-plugin>
     <id>com.allgorith.youla_tools.imagediff</id>
     <name>ImageDiff</name>
+    <version>0.1.1</version>
     <vendor>...</vendor>
 
     <depends>com.intellij.modules.platform</depends>

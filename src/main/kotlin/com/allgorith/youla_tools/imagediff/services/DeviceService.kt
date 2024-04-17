@@ -93,10 +93,12 @@ class DeviceService(private val project: Project) {
                     while (parts.hasNext()) {
                         // key:value
                         val kv = parts.next().split(":")
-                        val key = kv[0]
-                        val value = kv[1]
-                        when (key) {
-                            "model" -> name = value
+                        if (kv.size == 2) {
+                            val key = kv[0]
+                            val value = kv[1]
+                            when (key) {
+                                "model" -> name = value
+                            }
                         }
                     }
 
