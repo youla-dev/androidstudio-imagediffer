@@ -5,11 +5,9 @@ import com.intellij.util.ui.UIUtil
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.jetbrains.plugins.notebooks.visualization.use
 import java.awt.Color
 import java.awt.Composite
 import java.awt.Graphics
@@ -125,9 +123,7 @@ class ImgCanvas(
     fun compileViewportImage(): BufferedImage {
         return UIUtil.createImage(this, rect.width, rect.height, BufferedImage.TYPE_INT_ARGB)
             .apply {
-                graphics.use {
-                    paint(it)
-                }
+                paint(graphics)
             }
     }
 
@@ -151,7 +147,7 @@ class ImgCanvas(
             }
         }
 
-        (img.graphics as Graphics2D).use { g ->
+        (img.graphics as Graphics2D).let { g ->
             g.renderRespectingAspect(ref, referenceXOffset, referenceYOffset, w)
             g.composite = composite
             g.renderRespectingAspect(scr, 0, 0, w)
