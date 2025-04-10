@@ -1,14 +1,10 @@
 [versions]
 # libraries
-annotations = "24.0.1"
 
 # plugins
 kotlin = "1.8.21"
-gradleIntelliJPlugin = "1.14.1"
-
-[libraries]
-annotations = { group = "org.jetbrains", name = "annotations", version.ref = "annotations" }
+intellijPlatform = "2.5.0"
 
 [plugins]
-gradleIntelliJPlugin = { id = "org.jetbrains.intellij", version.ref = "gradleIntelliJPlugin" }
+intellijPlatformPlugin = { id = "org.jetbrains.intellij.platform", version.ref = "intellijPlatform"}
 kotlin = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

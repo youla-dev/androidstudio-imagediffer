@@ -4,11 +4,17 @@ fun environment(key: String) = providers.environmentVariable(key)
 plugins {
     id("java")
     alias(libs.plugins.kotlin)
-    alias(libs.plugins.gradleIntelliJPlugin)
+    alias(libs.plugins.intellijPlatformPlugin)
 }
 
 group = properties("pluginGroup").get()
 version = properties("pluginVersion").get()
+
+intellijPlatform {
+    pluginConfiguration {
+        name = properties("pluginName")
+    }
+}
 
 // Configure project's dependencies
 repositories {
@@ -20,26 +26,26 @@ kotlin {
     jvmToolchain(17)
 }
 
-// Configure Gradle IntelliJ Plugin - read more: https://plugins.jetbrains.com/docs/intellij/tools-gradle-intellij-plugin.html
-intellij {
-    pluginName = properties("pluginName")
-    version = properties("platformVersion")
-    type = properties("platformType")
-
-    // Plugin Dependencies. Uses `platformPlugins` property from the gradle.properties file.
-    plugins = properties("platformPlugins").map {
-        it.split(',').map(String::trim).filter(String::isNotEmpty)
+tasks {
+    // some bugs with gradle and version
+    // version visible in plugins will still be broken 🙃
+    jar {
+        archiveVersion = properties("pluginVersion").get()
+    }
+    jarSearchableOptions {
+        archiveVersion = properties("pluginVersion").get()
+    }
+    composedJar {
+        archiveVersion = properties("pluginVersion").get()
+    }
+    buildPlugin {
+        archiveVersion = properties("pluginVersion").get()
     }
 
-    // Use IntelliJ IDEA CE because it's the basis of the IntelliJ Platform:
-    type.set("IC")
-}
-
-tasks {
     runIde {
         // Absolute path to installed target 3.5 Android Studio to use as
         // IDE Development Instance (the "Contents" directory is macOS specific):
-        ideDir.set(file("/Applications/Android Studio.app/Contents"))
+//        ideDir.set(file("/Applications/Android Studio.app/Contents"))
     }
 
     wrapper {
@@ -50,5 +56,24 @@ tasks {
         version = properties("pluginVersion")
         sinceBuild = properties("pluginSinceBuild")
         untilBuild = properties("pluginUntilBuild")
+    }
+}
+
+// https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin.html#configuration.repositories
+repositories {
+    mavenCentral()
+
+    intellijPlatform {
+        defaultRepositories()
+    }
+}
+
+// https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin.html#dependenciesParametrizePlatform
+dependencies {
+    intellijPlatform {
+        val type = properties("platformType")
+        val version = properties("platformVersion")
+
+        create(type, version)
     }
 }

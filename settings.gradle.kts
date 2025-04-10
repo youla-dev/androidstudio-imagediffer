@@ -1,1 +1,1 @@
-rootProject.name = "ImageDiff"
+rootProject.name = "Image Differ"
